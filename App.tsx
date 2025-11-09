@@ -25,6 +25,8 @@ export default function App() {
           options={{ title: "Inventory" }}
         />
       </Stack.Navigator>
+      <Stack.Screen name="InventoryList" component={InventoryListScreen} />
+
     </NavigationContainer>
   );
 }

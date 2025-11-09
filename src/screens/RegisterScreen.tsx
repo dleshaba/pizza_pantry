@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { View, TextInput, Button, Text, Alert } from "react-native";
 import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
+import { RootStackParamList } from "../../types";
+
 
 type Props = NativeStackScreenProps<RootStackParamList, "Register">;
 
@@ -14,7 +15,7 @@ export default function RegisterScreen({ navigation }: Props) {
     if (!email || !password) return Alert.alert("Please fill in all fields");
 
     try {
-      await axios.post("https://your-api.com/register", { email, password });
+      await axios.post("http://127.0.0.1:5000/api/register", { email, password });
       Alert.alert("Success", "Account created!");
       navigation.navigate("Login");
     } catch (err) {

@@ -1,26 +1,35 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../App";
+import { RootStackParamList } from "../../types";
+import { loginUser } from "../services/AuthService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) return Alert.alert("Please fill in all fields");
+    if (!email || !password) {
+      Alert.alert("Validation Error", "Please enter email and password");
+      return;
+    }
 
     try {
-      const res = await axios.post("https://your-api.com/login", { email, password });
-
-      await AsyncStorage.setItem("token", res.data.token);
-      navigation.replace("Home");
-    } catch (err) {
-      Alert.alert("Login failed", "Invalid email or password");
+      setLoading(true);
+      const data = await loginUser(email, password);
+      console.log("Login response:", data); // debug
+      await AsyncStorage.setItem("token", data.token);
+      Alert.alert("Login Successful", `Welcome ${data.user.name}`);
+      navigation.navigate("InventoryList");
+    } catch (err: any) {
+      console.log("Login error:", err.response?.data || err.message);
+      Alert.alert("Login Failed", err.response?.data?.message || err.message || "Unknown error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,6 +40,8 @@ export default function LoginScreen({ navigation }: Props) {
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
         style={{ borderWidth: 1, borderRadius: 8, marginBottom: 10, padding: 10 }}
       />
       <TextInput
@@ -40,7 +51,7 @@ export default function LoginScreen({ navigation }: Props) {
         onChangeText={setPassword}
         style={{ borderWidth: 1, borderRadius: 8, marginBottom: 10, padding: 10 }}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title={loading ? "Logging in..." : "Login"} onPress={handleLogin} />
       <Text
         style={{ textAlign: "center", marginTop: 15, color: "blue" }}
         onPress={() => navigation.navigate("Register")}

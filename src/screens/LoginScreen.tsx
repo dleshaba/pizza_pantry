@@ -15,7 +15,6 @@ export default function LoginScreen({ navigation }: Props) {
     if (!email || !password) return Alert.alert("Please fill in all fields");
 
     try {
-      // Replace this URL with your actual API
       const res = await axios.post("https://your-api.com/login", { email, password });
 
       await AsyncStorage.setItem("token", res.data.token);

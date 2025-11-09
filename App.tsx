@@ -3,13 +3,15 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
-import InventoryListScreen from "./src/screens/InventoryListScreen"; // you can make a placeholder
+import InventoryListScreen from "./src/screens/InventoryListScreen";
+import AddItemScreen  from "./src/screens/AddItemScreen";
+import { RootStackParamList } from "./types";
 
-export type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  InventoryList: undefined;
-};
+// export type RootStackParamList = {
+//   Login: undefined;
+//   Register: undefined;
+//   InventoryList: undefined;
+// };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,9 +26,11 @@ export default function App() {
           component={InventoryListScreen}
           options={{ title: "Inventory" }}
         />
+        
+         <Stack.Screen name="AddItem" component={AddItemScreen} />
       </Stack.Navigator>
-      <Stack.Screen name="InventoryList" component={InventoryListScreen} />
-
+      
+      
     </NavigationContainer>
   );
 }

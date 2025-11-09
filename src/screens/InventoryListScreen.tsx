@@ -9,18 +9,28 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types";
 import { getItems } from "../services/itemsService";
 
+type Props = NativeStackScreenProps<RootStackParamList, "InventoryList">;
 
-const InventoryListScreen = ({ navigation }: any) => {
-  const [items, setItems] = useState<any[]>([]);
-  const [filteredItems, setFilteredItems] = useState<any[]>([]);
+interface Item {
+  _id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  reorderThreshold: number;
+}
+
+const InventoryListScreen = ({ navigation }: Props) => {
+  const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filterLowStock, setFilterLowStock] = useState(false);
 
-  // 🧠 Fetch items from backend
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
@@ -38,14 +48,12 @@ const InventoryListScreen = ({ navigation }: any) => {
     loadItems();
   }, [loadItems]);
 
-  // 🔄 Pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
     await loadItems();
     setRefreshing(false);
   };
 
-  // 🔍 Search filter
   useEffect(() => {
     let filtered = items.filter(
       (item) =>
@@ -90,13 +98,13 @@ const InventoryListScreen = ({ navigation }: any) => {
           style={styles.addButton}
           onPress={() => navigation.navigate("AddItem")}
         >
-          <Text style={{ color: "white", fontWeight: "600" }}>+ Add Item</Text>
+          <Text style={styles.addButtonText}>Add Item</Text>
         </TouchableOpacity>
       </View>
 
       <FlatList
         data={filteredItems}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item._id || Math.random().toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.itemCard}
@@ -143,6 +151,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#32CD32",
     padding: 10,
     borderRadius: 8,
+  },
+  addButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
   itemCard: {
     borderWidth: 1,

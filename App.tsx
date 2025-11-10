@@ -5,6 +5,7 @@ import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
 import InventoryListScreen from "./src/screens/InventoryListScreen";
 import AddItemScreen  from "./src/screens/AddItemScreen";
+import EditItemScreen from "./src/screens/EditItemScreen";
 import { RootStackParamList } from "./types";
 
 // export type RootStackParamList = {
@@ -28,6 +29,8 @@ export default function App() {
         />
         
          <Stack.Screen name="AddItem" component={AddItemScreen} />
+         <Stack.Screen name="EditItem" component={EditItemScreen} options={{ title: "Edit Item" }} />
+
       </Stack.Navigator>
       
       

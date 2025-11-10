@@ -10,6 +10,8 @@ const Stack = createNativeStackNavigator();
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  InventoryList: undefined;
   AddItem: undefined;
-};
+  ItemDetail: { item: any };
+  InventoryList: { refresh?: boolean } | undefined;
+  EditItem: { item: any };
+}

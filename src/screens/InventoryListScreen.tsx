@@ -8,30 +8,14 @@ import {
   TextInput,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types";
+import { useFocusEffect } from "@react-navigation/native";
 import { getItems } from "../services/ItemsService";
 
-type Props = NativeStackScreenProps<RootStackParamList, "InventoryList">;
-
-interface Item {
-  _id: string;
-  name: string;
-  category: string;
-  unit: string;
-  quantity: number;
-  reorderThreshold: number;
-  costPrice: number;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-
-const InventoryListScreen = ({ navigation }: Props) => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+const InventoryListScreen = ({ navigation }: any) => {
+  const [items, setItems] = useState<any[]>([]);
+  const [filteredItems, setFilteredItems] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,6 +29,7 @@ const InventoryListScreen = ({ navigation }: Props) => {
       setFilteredItems(data);
     } catch (err: any) {
       console.error("Error fetching items:", err.message);
+      Alert.alert("Error", "Failed to load inventory items.");
     } finally {
       setLoading(false);
     }
@@ -53,6 +38,13 @@ const InventoryListScreen = ({ navigation }: Props) => {
   useEffect(() => {
     loadItems();
   }, [loadItems]);
+
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadItems();
+    }, [loadItems])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -68,7 +60,9 @@ const InventoryListScreen = ({ navigation }: Props) => {
     );
 
     if (filterLowStock) {
-      filtered = filtered.filter((item) => item.quantity <= item.reorderThreshold);
+      filtered = filtered.filter(
+        (item) => item.quantity <= item.reorderThreshold
+      );
     }
 
     setFilteredItems(filtered);
@@ -94,10 +88,15 @@ const InventoryListScreen = ({ navigation }: Props) => {
 
       <View style={styles.filterRow}>
         <TouchableOpacity
-          style={[styles.filterButton, filterLowStock && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            filterLowStock && styles.filterButtonActive,
+          ]}
           onPress={() => setFilterLowStock(!filterLowStock)}
         >
-          <Text style={{ color: filterLowStock ? "white" : "black" }}>Low Stock</Text>
+          <Text style={{ color: filterLowStock ? "white" : "black" }}>
+            Low Stock
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -110,11 +109,11 @@ const InventoryListScreen = ({ navigation }: Props) => {
 
       <FlatList
         data={filteredItems}
-        keyExtractor={(item) => item._id || Math.random().toString()}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.itemCard}
-            onPress={() => navigation.navigate("ItemDetail", { item })}
+            onPress={() => navigation.navigate("EditItem", { item })}
           >
             <Text style={styles.itemName}>{item.name}</Text>
             <Text>Category: {item.category}</Text>
@@ -122,7 +121,9 @@ const InventoryListScreen = ({ navigation }: Props) => {
             <Text>Reorder: {item.reorderThreshold}</Text>
           </TouchableOpacity>
         )}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         ListEmptyComponent={<Text style={styles.empty}>No items found.</Text>}
       />
     </View>

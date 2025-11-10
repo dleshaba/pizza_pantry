@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types";
-import { getItems } from "../services/itemsService";
+import { getItems } from "../services/ItemsService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "InventoryList">;
 
@@ -19,9 +19,15 @@ interface Item {
   _id: string;
   name: string;
   category: string;
+  unit: string;
   quantity: number;
   reorderThreshold: number;
+  costPrice: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
 
 const InventoryListScreen = ({ navigation }: Props) => {
   const [items, setItems] = useState<Item[]>([]);

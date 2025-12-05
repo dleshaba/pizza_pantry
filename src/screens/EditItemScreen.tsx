@@ -67,7 +67,7 @@ const EditItemScreen = ({ route, navigation }: Props) => {
       await updateItem(item._id, updatedItem);
 
       Alert.alert("Success", "Item updated successfully!");
-      navigation.navigate("InventoryList", { refresh: true }); // ✅ navigate back with refresh flag
+      navigation.navigate("EditItem", { item, refresh: loadItems }); 
     } catch (err: any) {
       console.error("Error updating item:", err.message);
       Alert.alert("Error", "Failed to update item.");
@@ -147,3 +147,7 @@ const styles = StyleSheet.create({
 });
 
 export default EditItemScreen;
+function loadItems(): Promise<void> {
+    throw new Error("Function not implemented.");
+}
+

@@ -24,11 +24,19 @@ export const updateItem = async (id: string, item: any) => {
   return res.data;
 };
 
+// export const deleteItem = async (id: string) => {
+//   const headers = await getAuthHeaders();
+//   const res = await api.delete(`/items/${id}`, { headers });
+//   return res.data;
+// };
+
 export const deleteItem = async (id: string) => {
-  const headers = await getAuthHeaders();
+  const token = await AsyncStorage.getItem("token");
+  const headers = { Authorization: `Bearer ${token}` };
   const res = await api.delete(`/items/${id}`, { headers });
   return res.data;
 };
+
 
 export const adjustQuantity = async (id: string, delta: number, reason: string) => {
   const headers = await getAuthHeaders();

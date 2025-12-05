@@ -10,12 +10,28 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { getItems } from "../services/ItemsService";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types";
+import { getItems, deleteItem } from "../services/ItemsService";
 
-const InventoryListScreen = ({ navigation }: any) => {
-  const [items, setItems] = useState<any[]>([]);
-  const [filteredItems, setFilteredItems] = useState<any[]>([]);
+type Props = NativeStackScreenProps<RootStackParamList, "InventoryList">;
+
+interface Item {
+  _id: string;
+  name: string;
+  category: string;
+  unit: string;
+  quantity: number;
+  reorderThreshold: number;
+  costPrice: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const InventoryListScreen = ({ navigation }: Props) => {
+  const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,7 +45,6 @@ const InventoryListScreen = ({ navigation }: any) => {
       setFilteredItems(data);
     } catch (err: any) {
       console.error("Error fetching items:", err.message);
-      Alert.alert("Error", "Failed to load inventory items.");
     } finally {
       setLoading(false);
     }
@@ -39,19 +54,13 @@ const InventoryListScreen = ({ navigation }: any) => {
     loadItems();
   }, [loadItems]);
 
-  // Refresh when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadItems();
-    }, [loadItems])
-  );
-
   const onRefresh = async () => {
     setRefreshing(true);
     await loadItems();
     setRefreshing(false);
   };
 
+  // Search + low stock filter
   useEffect(() => {
     let filtered = items.filter(
       (item) =>
@@ -60,13 +69,34 @@ const InventoryListScreen = ({ navigation }: any) => {
     );
 
     if (filterLowStock) {
-      filtered = filtered.filter(
-        (item) => item.quantity <= item.reorderThreshold
-      );
+      filtered = filtered.filter((item) => item.quantity <= item.reorderThreshold);
     }
 
     setFilteredItems(filtered);
   }, [searchQuery, filterLowStock, items]);
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteItem(id);
+              Alert.alert("Deleted", "Item deleted successfully.");
+              await loadItems(); // refresh list automatically
+            } catch (err: any) {
+              Alert.alert("Error", err.response?.data?.message || err.message);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   if (loading) {
     return (
@@ -88,20 +118,15 @@ const InventoryListScreen = ({ navigation }: any) => {
 
       <View style={styles.filterRow}>
         <TouchableOpacity
-          style={[
-            styles.filterButton,
-            filterLowStock && styles.filterButtonActive,
-          ]}
+          style={[styles.filterButton, filterLowStock && styles.filterButtonActive]}
           onPress={() => setFilterLowStock(!filterLowStock)}
         >
-          <Text style={{ color: filterLowStock ? "white" : "black" }}>
-            Low Stock
-          </Text>
+          <Text style={{ color: filterLowStock ? "white" : "black" }}>Low Stock</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("AddItem")}
+          onPress={() => navigation.navigate("AddItem", { refresh: loadItems })}
         >
           <Text style={styles.addButtonText}>Add Item</Text>
         </TouchableOpacity>
@@ -111,19 +136,32 @@ const InventoryListScreen = ({ navigation }: any) => {
         data={filteredItems}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.itemCard}
-            onPress={() => navigation.navigate("EditItem", { item })}
-          >
+          <View style={styles.itemCard}>
             <Text style={styles.itemName}>{item.name}</Text>
             <Text>Category: {item.category}</Text>
             <Text>Quantity: {item.quantity}</Text>
+            <Text>Unit: {item.unit}</Text>
             <Text>Reorder: {item.reorderThreshold}</Text>
-          </TouchableOpacity>
+            <Text>Cost: {item.costPrice}</Text>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => navigation.navigate("EditItem", { item, refresh: loadItems })}
+              >
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDelete(item._id)}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={<Text style={styles.empty}>No items found.</Text>}
       />
     </View>
@@ -171,6 +209,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   itemName: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
+  actionRow: { flexDirection: "row", justifyContent: "flex-end", marginTop: 10 },
+  editButton: {
+    backgroundColor: "#FFA500",
+    padding: 8,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  editButtonText: { color: "white", fontWeight: "bold" },
+  deleteButton: {
+    backgroundColor: "#FF3333",
+    padding: 8,
+    borderRadius: 5,
+  },
+  deleteButtonText: { color: "white", fontWeight: "bold" },
   empty: { textAlign: "center", marginTop: 20, color: "#777" },
 });
 
